@@ -8,10 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    # net48 requires Windows to build/test; the `services:` key only works on Linux runners,
-    # so LocalStack is started explicitly via `docker run` instead (Docker Desktop is
-    # preinstalled on windows-latest GitHub-hosted runners).
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +28,6 @@ jobs:
         run: dotnet test --configuration Release --no-build --filter "Category!=Integration"
 
       - name: Start LocalStack
-        shell: bash
         run: |
           docker run -d --name localstack -p 4566:4566 \
             -e SERVICES=secretsmanager -e DEFAULT_REGION=us-west-2 \
@@ -42,9 +38,7 @@ jobs:
           done
 
       - name: Seed LocalStack secrets
-        shell: bash
         run: |
-          pip install awscli
           chmod +x ./docker/seed-secrets.sh
           ./docker/seed-secrets.sh
 
@@ -53,5 +47,4 @@ jobs:
 
       - name: Stop LocalStack
         if: always()
-        shell: bash
         run: docker rm -f localstack || true
