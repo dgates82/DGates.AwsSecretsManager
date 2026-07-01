@@ -22,7 +22,7 @@ namespace DGates.AwsSecretsManager
         private readonly SecretsManagerSettings _settings;
         private readonly IAmazonSecretsManager _client;
         private readonly ConcurrentDictionary<string, CachedSecret> _cache = new ConcurrentDictionary<string, CachedSecret>();
-        private readonly AsyncRetryPolicy _retryPolicy;
+        private readonly ResiliencePipeline<string> _retryPipeline;
         private readonly bool _ownsClient;
 
         /// <summary>
@@ -44,12 +44,15 @@ namespace DGates.AwsSecretsManager
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _client = client ?? throw new ArgumentNullException(nameof(client));
 
-            _retryPolicy = Policy
-                .Handle<AmazonSecretsManagerException>(IsTransient)
-                .WaitAndRetryAsync(
-                    _settings.MaxRetryAttempts,
-                    attempt => TimeSpan.FromMilliseconds(
-                        _settings.RetryBaseDelay.TotalMilliseconds * Math.Pow(2, attempt - 1)));
+            _retryPipeline = new ResiliencePipelineBuilder<string>()
+                .AddRetry(new RetryStrategyOptions<string>
+                {
+                    ShouldHandle = new PredicateBuilder<string>().Handle<AmazonSecretsManagerException>(IsTransient),
+                    MaxRetryAttempts = _settings.MaxRetryAttempts,
+                    Delay = _settings.RetryBaseDelay,
+                    BackoffType = DelayBackoffType.Exponential
+                })
+                .Build();
         }
 
         /// <inheritdoc/>
@@ -94,7 +97,7 @@ namespace DGates.AwsSecretsManager
             if (!string.IsNullOrWhiteSpace(_settings.LocalJsonFallbackPath))
                 return FetchFromLocalJsonFallback(secretName);
 
-            return await _retryPolicy.ExecuteAsync(async ct =>
+            return await _retryPipeline.ExecuteAsync(async ct =>
             {
                 var response = await _client.GetSecretValueAsync(new GetSecretValueRequest
                 {
@@ -148,13 +151,17 @@ namespace DGates.AwsSecretsManager
         {
             var config = new AmazonSecretsManagerConfig();
 
-            if (!string.IsNullOrWhiteSpace(settings.Region))
-                config.RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(settings.Region);
-
             if (!string.IsNullOrWhiteSpace(settings.ServiceUrl))
             {
                 config.ServiceURL = settings.ServiceUrl;
                 config.UseHttp = settings.ServiceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+                config.DisableHostPrefixInjection = true;
+                if (!string.IsNullOrWhiteSpace(settings.Region))
+                    config.AuthenticationRegion = settings.Region;
+            }
+            else if (!string.IsNullOrWhiteSpace(settings.Region))
+            {
+                config.RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(settings.Region);
             }
 
             if (!string.IsNullOrWhiteSpace(settings.AccessKey) && !string.IsNullOrWhiteSpace(settings.SecretKey))
