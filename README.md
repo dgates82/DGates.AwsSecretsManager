@@ -51,4 +51,4 @@ MIT — see [LICENSE](./LICENSE).
 
 ## Contributing
 
-Issues and PRs welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) (coming soon).
+Issues and PRs welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md).
