@@ -8,6 +8,7 @@ obj/
 ## NuGet
 *.nupkg
 packages/
+NuGet.config
 
 ## Docker / LocalStack
 docker/localstack-data/

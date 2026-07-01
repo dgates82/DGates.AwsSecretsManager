@@ -1,8 +1,6 @@
-using System;
 using System.Threading.Tasks;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
-using DGates.AwsSecretsManager;
 using Xunit;
 
 namespace DGates.AwsSecretsManager.Tests.Integration
@@ -43,14 +41,16 @@ namespace DGates.AwsSecretsManager.Tests.Integration
         {
             try
             {
+                using (var cts = new System.Threading.CancellationTokenSource(System.TimeSpan.FromSeconds(5)))
                 using (var client = new AmazonSecretsManagerClient("test", "test", new AmazonSecretsManagerConfig
                 {
                     ServiceURL = LocalStackUrl,
                     UseHttp = true,
-                    RegionEndpoint = Amazon.RegionEndpoint.USWest2
+                    RegionEndpoint = Amazon.RegionEndpoint.USWest2,
+                    Timeout = System.TimeSpan.FromSeconds(5)
                 }))
                 {
-                    await client.ListSecretsAsync(new ListSecretsRequest());
+                    await client.ListSecretsAsync(new ListSecretsRequest(), cts.Token);
                     return true;
                 }
             }

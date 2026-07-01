@@ -35,7 +35,7 @@ jobs:
         run: |
           docker run -d --name localstack -p 4566:4566 \
             -e SERVICES=secretsmanager -e DEFAULT_REGION=us-west-2 \
-            localstack/localstack:latest
+            localstack/localstack:3
           for i in {1..20}; do
             curl -sf http://localhost:4566/_localstack/health && break
             sleep 3

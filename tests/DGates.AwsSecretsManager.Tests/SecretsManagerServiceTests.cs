@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
-using DGates.AwsSecretsManager;
 using Moq;
 using Xunit;
 
