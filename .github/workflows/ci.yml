@@ -18,6 +18,12 @@ jobs:
         with:
           dotnet-version: '8.0.x' # dotnet CLI tooling; net48 is the build/test target framework
 
+      # Required for net48 on Ubuntu/macOS runners
+      - name: Setup Mono
+        uses: fabiangrosser/setup-mono@v1
+        with:
+          mono-version: 'latest'
+          
       - name: Restore
         run: dotnet restore DGates.AwsSecretsManager.sln
 
