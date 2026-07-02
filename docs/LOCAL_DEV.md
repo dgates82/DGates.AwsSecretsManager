@@ -42,3 +42,23 @@ dotnet test
 ```sh
 docker compose down -v
 ```
+
+## Building a local NuGet package
+
+Use this to test the package locally before publishing, or to reference it from the examples repo.
+
+```sh
+dotnet pack DGates.AwsSecretsManager.sln --configuration Release /p:Version=0.1.0 --output ./nupkg
+```
+
+To reference the local package from another project, add a local NuGet source:
+
+```sh
+dotnet nuget add source /path/to/DGates.AwsSecretsManager/nupkg --name DGatesLocal
+```
+
+Then reference it normally in the consuming project's `.csproj`:
+
+```xml
+<PackageReference Include="DGates.AwsSecretsManager" Version="0.1.0" />
+```
