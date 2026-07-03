@@ -66,12 +66,16 @@ namespace DGates.AwsSecretsManager
         public async Task<string> GetSecretStringAsync(string secretName, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(secretName))
+            {
                 throw new ArgumentException("Secret name must be provided.", nameof(secretName));
+            }
 
             var now = DateTimeOffset.UtcNow;
 
             if (_cache.TryGetValue(secretName, out var cached) && !cached.IsExpired(now))
+            {
                 return cached.RawValue;
+            }
 
             var raw = await FetchRawAsync(secretName, cancellationToken).ConfigureAwait(false);
             _cache[secretName] = new CachedSecret(raw, now + _settings.CacheTtl);
@@ -95,7 +99,9 @@ namespace DGates.AwsSecretsManager
         private async Task<string> FetchRawAsync(string secretName, CancellationToken cancellationToken)
         {
             if (!string.IsNullOrWhiteSpace(_settings.LocalJsonFallbackPath))
+            {
                 return FetchFromLocalJsonFallback(secretName);
+            }
 
             return await _retryPipeline.ExecuteAsync(async ct =>
             {
@@ -111,15 +117,19 @@ namespace DGates.AwsSecretsManager
         private string FetchFromLocalJsonFallback(string secretName)
         {
             if (!File.Exists(_settings.LocalJsonFallbackPath))
+            {
                 throw new FileNotFoundException(
                     $"Local JSON fallback file not found at '{_settings.LocalJsonFallbackPath}'.");
+            }
 
             var json = File.ReadAllText(_settings.LocalJsonFallbackPath);
             var root = JObject.Parse(json);
 
             if (!root.TryGetValue(secretName, out var token))
+            {
                 throw new ResourceNotFoundException(
                     $"Secret '{secretName}' not found in local JSON fallback file.");
+            }
 
             return token.ToString(Formatting.None);
         }
@@ -157,7 +167,9 @@ namespace DGates.AwsSecretsManager
                 config.UseHttp = settings.ServiceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
                 config.DisableHostPrefixInjection = true;
                 if (!string.IsNullOrWhiteSpace(settings.Region))
+                {
                     config.AuthenticationRegion = settings.Region;
+                }
             }
             else if (!string.IsNullOrWhiteSpace(settings.Region))
             {
@@ -165,7 +177,9 @@ namespace DGates.AwsSecretsManager
             }
 
             if (!string.IsNullOrWhiteSpace(settings.AccessKey) && !string.IsNullOrWhiteSpace(settings.SecretKey))
+            {
                 return new AmazonSecretsManagerClient(settings.AccessKey, settings.SecretKey, config);
+            }
 
             // Falls back to the default AWS credential chain.
             return new AmazonSecretsManagerClient(config);
@@ -178,7 +192,9 @@ namespace DGates.AwsSecretsManager
         public void Dispose()
         {
             if (_ownsClient)
+            {
                 _client.Dispose();
+            }
         }
     }
 }

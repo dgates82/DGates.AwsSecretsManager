@@ -4,19 +4,36 @@ namespace DGates.AwsSecretsManager
 {
     /// <summary>
     /// Configuration for <see cref="SecretsManagerService"/>.
+    /// <para>
+    /// <b>Credential resolution:</b> if <see cref="AccessKey"/> and <see cref="SecretKey"/>
+    /// are not set, the underlying AWS SDK falls back to its standard credential chain in this
+    /// order: environment variables (<c>AWS_ACCESS_KEY_ID</c> / <c>AWS_SECRET_ACCESS_KEY</c>),
+    /// the <c>&lt;appSettings&gt;</c> keys <c>AWSAccessKey</c> / <c>AWSSecretKey</c> in
+    /// web.config or app.config, the shared credentials file (<c>~/.aws/credentials</c>),
+    /// and finally the EC2/ECS instance metadata service (IAM role).
+    /// For most .NET Framework applications not hosted on AWS, set <see cref="AccessKey"/> and
+    /// <see cref="SecretKey"/> explicitly, or populate the web.config <c>&lt;appSettings&gt;</c>
+    /// keys so the credential chain can resolve them automatically.
+    /// </para>
     /// </summary>
     public class SecretsManagerSettings
     {
-        /// <summary>AWS region the secrets live in, e.g. "us-west-2".</summary>
+        /// <summary>
+        /// AWS region the secrets live in, e.g. "us-west-2". If not set, the SDK looks for
+        /// the <c>AWS_REGION</c> environment variable or the <c>AWSRegion</c> app.config key.
+        /// </summary>
         public string Region { get; set; }
 
         /// <summary>
-        /// Optional explicit access key. If null, falls back to the default AWS credential
-        /// chain (environment variables, IAM role, shared credentials file, etc).
+        /// Optional explicit AWS access key. If not set, the SDK credential chain resolves
+        /// credentials automatically — see the class-level remarks for resolution order.
         /// </summary>
         public string AccessKey { get; set; }
 
-        /// <summary>Optional explicit secret key. See <see cref="AccessKey"/> remarks.</summary>
+        /// <summary>
+        /// Optional explicit AWS secret key. Required when <see cref="AccessKey"/> is set.
+        /// If not set, the SDK credential chain resolves credentials automatically.
+        /// </summary>
         public string SecretKey { get; set; }
 
         /// <summary>

@@ -2,6 +2,9 @@
 .idea/
 .claudeignore
 
+## Local planning
+ROADMAP.md
+
 ## .NET
 bin/
 obj/

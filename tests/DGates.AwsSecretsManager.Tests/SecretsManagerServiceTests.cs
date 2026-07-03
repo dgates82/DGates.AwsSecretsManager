@@ -18,7 +18,9 @@ namespace DGates.AwsSecretsManager.Tests
         {
             var mockClient = new Mock<IAmazonSecretsManager>();
             mockClient
-                .Setup(c => c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+                .Setup(c => 
+                    c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), 
+                        It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Response("{\"ApiKey\":\"abc123\"}"));
 
             var service = new SecretsManagerService(new SecretsManagerSettings(), mockClient.Object);
