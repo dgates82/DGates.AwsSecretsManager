@@ -21,7 +21,8 @@ namespace DGates.AwsSecretsManager
     {
         private readonly SecretsManagerSettings _settings;
         private readonly IAmazonSecretsManager _client;
-        private readonly ConcurrentDictionary<string, CachedSecret> _cache = new ConcurrentDictionary<string, CachedSecret>();
+        private readonly ConcurrentDictionary<string, CachedSecret> _cache =
+            new ConcurrentDictionary<string, CachedSecret>();
         private readonly ResiliencePipeline<string> _retryPipeline;
         private readonly bool _ownsClient;
 
@@ -36,8 +37,8 @@ namespace DGates.AwsSecretsManager
         }
 
         /// <summary>
-        /// Constructor for injecting a pre-configured <see cref="IAmazonSecretsManager"/> client directly,
-        /// primarily for testing.
+        /// Constructor for injecting a pre-configured <see cref="IAmazonSecretsManager"/> client
+        /// directly, primarily for testing.
         /// </summary>
         public SecretsManagerService(SecretsManagerSettings settings, IAmazonSecretsManager client)
         {
@@ -47,7 +48,8 @@ namespace DGates.AwsSecretsManager
             _retryPipeline = new ResiliencePipelineBuilder<string>()
                 .AddRetry(new RetryStrategyOptions<string>
                 {
-                    ShouldHandle = new PredicateBuilder<string>().Handle<AmazonSecretsManagerException>(IsTransient),
+                    ShouldHandle = new PredicateBuilder<string>()
+                        .Handle<AmazonSecretsManagerException>(IsTransient),
                     MaxRetryAttempts = _settings.MaxRetryAttempts,
                     Delay = _settings.RetryBaseDelay,
                     BackoffType = DelayBackoffType.Exponential
@@ -56,14 +58,16 @@ namespace DGates.AwsSecretsManager
         }
 
         /// <inheritdoc/>
-        public async Task<T> GetSecretAsync<T>(string secretName, CancellationToken cancellationToken = default) where T : class
+        public async Task<T> GetSecretAsync<T>(string secretName, CancellationToken cancellationToken = default)
+            where T : class
         {
             var raw = await GetSecretStringAsync(secretName, cancellationToken).ConfigureAwait(false);
             return Deserialize<T>(raw);
         }
 
         /// <inheritdoc/>
-        public async Task<string> GetSecretStringAsync(string secretName, CancellationToken cancellationToken = default)
+        public async Task<string> GetSecretStringAsync(
+            string secretName, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(secretName))
             {
@@ -83,7 +87,8 @@ namespace DGates.AwsSecretsManager
         }
 
         /// <inheritdoc/>
-        public async Task<T> RefreshSecretAsync<T>(string secretName, CancellationToken cancellationToken = default) where T : class
+        public async Task<T> RefreshSecretAsync<T>(string secretName, CancellationToken cancellationToken = default)
+            where T : class
         {
             var raw = await FetchRawAsync(secretName, cancellationToken).ConfigureAwait(false);
             _cache[secretName] = new CachedSecret(raw, DateTimeOffset.UtcNow + _settings.CacheTtl);
@@ -164,7 +169,8 @@ namespace DGates.AwsSecretsManager
             if (!string.IsNullOrWhiteSpace(settings.ServiceUrl))
             {
                 config.ServiceURL = settings.ServiceUrl;
-                config.UseHttp = settings.ServiceUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+                config.UseHttp = settings.ServiceUrl.StartsWith(
+                    "http://", StringComparison.OrdinalIgnoreCase);
                 config.DisableHostPrefixInjection = true;
                 if (!string.IsNullOrWhiteSpace(settings.Region))
                 {
@@ -176,7 +182,8 @@ namespace DGates.AwsSecretsManager
                 config.RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(settings.Region);
             }
 
-            if (!string.IsNullOrWhiteSpace(settings.AccessKey) && !string.IsNullOrWhiteSpace(settings.SecretKey))
+            if (!string.IsNullOrWhiteSpace(settings.AccessKey) &&
+                !string.IsNullOrWhiteSpace(settings.SecretKey))
             {
                 return new AmazonSecretsManagerClient(settings.AccessKey, settings.SecretKey, config);
             }
