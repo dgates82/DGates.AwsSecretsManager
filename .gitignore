@@ -1,6 +1,7 @@
 ## IDE / tooling
 .idea/
 .claudeignore
+CLAUDE.md
 
 ## Local planning
 ROADMAP.md
