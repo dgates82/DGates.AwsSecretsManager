@@ -13,6 +13,22 @@ This repo's tests and example app can run entirely without a real AWS account us
    ```sh
    ./docker/seed-secrets.sh
    ```
+   The seed script populates placeholder values for all secrets. To inject real API keys
+   (e.g. a real OpenWeatherMap key for the examples app), create a local override file
+   that is gitignored:
+   ```sh
+   # docker/seed-secrets.local.sh — create this file locally, never commit it
+   #!/usr/bin/env bash
+   source "$(dirname "$0")/seed-secrets.sh"
+
+   create_or_update_secret "dev/DGates.AwsSecretsManager.Examples/OpenWeatherMap" \
+     '{"Url":"https://api.openweathermap.org/data/2.5/weather","ApiKey":"YOUR_REAL_KEY_HERE"}'
+   ```
+   Then run it instead of (or after) the main seed script:
+   ```sh
+   chmod +x ./docker/seed-secrets.local.sh
+   ./docker/seed-secrets.local.sh
+   ```
 3. Point your `SecretsManagerSettings` at LocalStack:
    ```csharp
    var settings = new SecretsManagerSettings
