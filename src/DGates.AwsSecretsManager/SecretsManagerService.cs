@@ -171,7 +171,6 @@ namespace DGates.AwsSecretsManager
                 config.ServiceURL = settings.ServiceUrl;
                 config.UseHttp = settings.ServiceUrl.StartsWith(
                     "http://", StringComparison.OrdinalIgnoreCase);
-                config.DisableHostPrefixInjection = true;
                 if (!string.IsNullOrWhiteSpace(settings.Region))
                 {
                     config.AuthenticationRegion = settings.Region;
