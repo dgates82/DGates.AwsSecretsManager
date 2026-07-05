@@ -20,7 +20,6 @@ NuGet.config
 
 ## Docker / LocalStack
 docker/localstack-data/
-docker/seed-secrets.local.sh
 
 ## OS
 .DS_Store

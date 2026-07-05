@@ -31,9 +31,4 @@ create_or_update_secret() {
 create_or_update_secret "test/SampleSecret" '{"Value":"local-dev-value"}'
 create_or_update_secret "myapp/ApiKey" '{"ApiKey":"local-dev-api-key-12345"}'
 
-# Examples repo — replace ApiKey with your real OpenWeatherMap key when testing against real AWS.
-# Against LocalStack the placeholder value is sufficient.
-create_or_update_secret "dev/DGates.AwsSecretsManager.Examples/OpenWeatherMap" \
-  '{"Url":"https://api.openweathermap.org/data/2.5/weather","ApiKey":"local-dev-replace-me"}'
-
 echo "Done. Seeded secrets are available at $ENDPOINT (region $REGION)."
