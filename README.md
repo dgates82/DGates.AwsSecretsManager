@@ -15,14 +15,12 @@ The official AWS SDK gives you raw `GetSecretValueAsync` calls and string blobs.
 
 ## Status
 
-Early development (`0.1.x`). API surface may shift before `1.0.0`. See [CHANGELOG.md](./CHANGELOG.md).
+Early development (`0.1.x`). API surface may shift before `1.0.0`. See [CHANGELOG.md](https://github.com/dgates82/DGates.AwsSecretsManager/blob/main/CHANGELOG.md).
 
 ## Install
 
-Not yet published to NuGet.org. For now, reference the project directly or build a local package:
-
 ```sh
-dotnet pack src/DGates.AwsSecretsManager -c Release
+dotnet add package DGates.AwsSecretsManager
 ```
 
 ## Quick start
@@ -39,16 +37,16 @@ var secretsService = new SecretsManagerService(settings);
 var apiKey = await secretsService.GetSecretAsync<MyApiKeySecret>("myapp/ApiKey");
 ```
 
-See the [examples repo](https://github.com/dgates82/DGates.AwsSecretsManager.Examples) for a for a working console sample, including local development against [LocalStack](https://www.localstack.cloud/) (no real AWS account required). An ASP.NET MVC example is coming soon.
+See the [examples repo](https://github.com/dgates82/DGates.AwsSecretsManager.Examples) for a working console sample, including local development against [LocalStack](https://www.localstack.cloud/) (no real AWS account required). An ASP.NET MVC example is coming soon.
 
 ## Local development & testing
 
-This repo includes a `docker-compose.yml` that spins up LocalStack with the Secrets Manager service enabled, plus a seed script for test secrets. See [docs/LOCAL_DEV.md](./docs/LOCAL_DEV.md).
+This repo includes a `docker-compose.yml` that spins up LocalStack with the Secrets Manager service enabled, plus a seed script for test secrets. See [docs/LOCAL_DEV.md](https://github.com/dgates82/DGates.AwsSecretsManager/blob/main/docs/LOCAL_DEV.md).
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT — see [LICENSE](https://github.com/dgates82/DGates.AwsSecretsManager/blob/main/LICENSE).
 
 ## Contributing
 
-Issues and PRs welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md).
+Issues and PRs welcome. See [CONTRIBUTING.md](https://github.com/dgates82/DGates.AwsSecretsManager/blob/main/CONTRIBUTING.md).
