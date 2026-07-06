@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0-beta.1] - TBD
+## [0.1.0-beta.1] - 2025-07-05
 
 ### Added
 - `ISecretsManagerService` — typed secret retrieval (`GetSecretAsync<T>`), raw string retrieval, cache invalidation, and forced refresh.

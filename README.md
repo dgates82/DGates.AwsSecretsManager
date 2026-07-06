@@ -39,7 +39,7 @@ var secretsService = new SecretsManagerService(settings);
 var apiKey = await secretsService.GetSecretAsync<MyApiKeySecret>("myapp/ApiKey");
 ```
 
-See the [examples repo](https://github.com/dgates82/DGates.AwsSecretsManager.Examples) for a full ASP.NET MVC sample app, including local development against [LocalStack](https://www.localstack.cloud/) (no real AWS account required).
+See the [examples repo](https://github.com/dgates82/DGates.AwsSecretsManager.Examples) for a for a working console sample, including local development against [LocalStack](https://www.localstack.cloud/) (no real AWS account required). An ASP.NET MVC example is coming soon.
 
 ## Local development & testing
 
