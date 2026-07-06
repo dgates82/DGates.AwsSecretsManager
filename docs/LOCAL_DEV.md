@@ -58,3 +58,23 @@ Then reference it normally in the consuming project's `.csproj`:
 ```xml
 <PackageReference Include="DGates.AwsSecretsManager" Version="0.1.0" />
 ```
+
+## Developing without Docker
+
+Docker Desktop's Linux-container support (needed for LocalStack) generally works fine on native
+Windows via WSL2, but isn't available in some environments — most notably a Windows VM nested
+inside another hypervisor without virtualization passthrough.
+
+In that case:
+- **Unit tests still run** — they don't depend on Docker or LocalStack at all.
+- **Integration tests (`Category=Integration`) require LocalStack and can't be skipped or faked.**
+  They exist specifically to verify the real `ServiceUrl`/AWS SDK code path, so pointing at
+  `LocalJsonFallbackPath` instead wouldn't actually test that path — it would just confirm the
+  fallback branch works, which is a different (and already separately tested) code path.
+- If you need to verify integration behavior without Docker, the more faithful option is pointing
+  `SecretsManagerSettings` at a real, disposable AWS Secrets Manager secret with a narrow IAM
+  policy, rather than substituting the JSON fallback.
+
+`LocalJsonFallbackPath` is meant for *consumers* of this library who want to develop their own
+app without any AWS/LocalStack dependency at all (see the examples repo's MvcExample for a
+working example) — not as a stand-in for this repo's own integration test suite.
