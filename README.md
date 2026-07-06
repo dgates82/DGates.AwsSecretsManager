@@ -40,8 +40,8 @@ var apiKey = await secretsService.GetSecretAsync<MyApiKeySecret>("myapp/ApiKey")
 See the [examples repo](https://github.com/dgates82/DGates.AwsSecretsManager.Examples) for a working console sample, including local development against [LocalStack](https://www.localstack.cloud/) (no real AWS account required). An ASP.NET MVC example is coming soon.
 
 ## Local development & testing
+This repo includes a `docker-compose.yml` that spins up LocalStack with the Secrets Manager service enabled, plus a seed script for test secrets. If Docker isn't available in your environment, unit tests still run without it — see [docs/LOCAL_DEV.md](https://github.com/dgates82/DGates.AwsSecretsManager/blob/main/docs/LOCAL_DEV.md#developing-without-docker) for what that does and doesn't cover.
 
-This repo includes a `docker-compose.yml` that spins up LocalStack with the Secrets Manager service enabled, plus a seed script for test secrets. See [docs/LOCAL_DEV.md](https://github.com/dgates82/DGates.AwsSecretsManager/blob/main/docs/LOCAL_DEV.md).
 
 ## License
 
