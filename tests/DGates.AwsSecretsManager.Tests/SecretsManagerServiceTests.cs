@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -92,6 +93,52 @@ namespace DGates.AwsSecretsManager.Tests
             var service = new SecretsManagerService(new SecretsManagerSettings(), new Mock<IAmazonSecretsManager>().Object);
 
             await Assert.ThrowsAsync<ArgumentException>(() => service.GetSecretStringAsync(""));
+        }
+
+        [Fact]
+        public async Task GetSecretStringAsync_LogsOnFetch()
+        {
+            var mockClient = new Mock<IAmazonSecretsManager>();
+            mockClient
+                .Setup(c => c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Response("{\"ApiKey\":\"abc123\"}"));
+            var mockLogger = new Mock<ILogger>();
+
+            var service = new SecretsManagerService(new SecretsManagerSettings(), mockClient.Object, mockLogger.Object);
+
+            await service.GetSecretStringAsync("myapp/ApiKey");
+
+            VerifyLogged(mockLogger);
+        }
+
+        [Fact]
+        public async Task GetSecretStringAsync_LogsOnRetryAfterTransientFailure()
+        {
+            var mockClient = new Mock<IAmazonSecretsManager>();
+            mockClient
+                .SetupSequence(c => c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InternalServiceErrorException("transient failure"))
+                .ReturnsAsync(Response("{\"ApiKey\":\"abc123\"}"));
+            var mockLogger = new Mock<ILogger>();
+
+            var service = new SecretsManagerService(new SecretsManagerSettings(), mockClient.Object, mockLogger.Object);
+
+            var result = await service.GetSecretStringAsync("myapp/ApiKey");
+
+            Assert.Equal("{\"ApiKey\":\"abc123\"}", result);
+            VerifyLogged(mockLogger);
+        }
+
+        private static void VerifyLogged(Mock<ILogger> mockLogger)
+        {
+            mockLogger.Verify(
+                l => l.Log(
+                    It.IsAny<LogLevel>(),
+                    It.IsAny<EventId>(),
+                    It.IsAny<It.IsAnyType>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                Times.AtLeastOnce());
         }
 
         private class TestSecret

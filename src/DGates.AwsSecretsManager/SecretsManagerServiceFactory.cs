@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace DGates.AwsSecretsManager
 {
@@ -12,17 +13,18 @@ namespace DGates.AwsSecretsManager
     {
         /// <summary>
         /// Creates a singleton-ready <see cref="ISecretsManagerService"/> instance from settings.
-        /// Register the *returned instance* as a singleton in your DI container, e.g.:
+        /// <paramref name="logger"/> is optional; when omitted, logging is a no-op. Register the
+        /// *returned instance* as a singleton in your DI container, e.g.:
         /// <code>
-        /// var service = SecretsManagerServiceFactory.Create(settings);
+        /// var service = SecretsManagerServiceFactory.Create(settings, logger);
         /// container.RegisterInstance&lt;ISecretsManagerService&gt;(service); // Unity
         /// builder.RegisterInstance(service).As&lt;ISecretsManagerService&gt;().SingleInstance(); // Autofac
         /// </code>
         /// </summary>
-        public static ISecretsManagerService Create(SecretsManagerSettings settings)
+        public static ISecretsManagerService Create(SecretsManagerSettings settings, ILogger logger = null)
         {
             if (settings == null) throw new ArgumentNullException(nameof(settings));
-            return new SecretsManagerService(settings);
+            return new SecretsManagerService(settings, logger);
         }
     }
 }
