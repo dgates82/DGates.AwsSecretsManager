@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 using DGates.AwsSecretsManager.Internal;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Polly;
@@ -25,25 +27,30 @@ namespace DGates.AwsSecretsManager
             new ConcurrentDictionary<string, CachedSecret>();
         private readonly ResiliencePipeline<string> _retryPipeline;
         private readonly bool _ownsClient;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Initializes a new instance using the provided settings, creating and owning an
-        /// <see cref="IAmazonSecretsManager"/> client internally.
+        /// <see cref="IAmazonSecretsManager"/> client internally. <paramref name="logger"/> is
+        /// optional; when omitted, logging is a no-op via <see cref="NullLogger"/>.
         /// </summary>
-        public SecretsManagerService(SecretsManagerSettings settings)
-            : this(settings, BuildClient(settings))
+        public SecretsManagerService(SecretsManagerSettings settings, ILogger logger = null)
+            : this(settings, BuildClient(settings), logger)
         {
             _ownsClient = true;
         }
 
         /// <summary>
         /// Constructor for injecting a pre-configured <see cref="IAmazonSecretsManager"/> client
-        /// directly, primarily for testing.
+        /// directly, primarily for testing. <paramref name="logger"/> is optional; when omitted,
+        /// logging is a no-op via <see cref="NullLogger"/>.
         /// </summary>
-        public SecretsManagerService(SecretsManagerSettings settings, IAmazonSecretsManager client)
+        public SecretsManagerService(SecretsManagerSettings settings, IAmazonSecretsManager client, ILogger logger = null)
         {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _client = client ?? throw new ArgumentNullException(nameof(client));
+
+            _logger = logger ?? NullLogger.Instance;
 
             _retryPipeline = new ResiliencePipelineBuilder<string>()
                 .AddRetry(new RetryStrategyOptions<string>
@@ -62,7 +69,16 @@ namespace DGates.AwsSecretsManager
             where T : class
         {
             var raw = await GetSecretStringAsync(secretName, cancellationToken).ConfigureAwait(false);
-            return Deserialize<T>(raw);
+            try
+            {
+                return Deserialize<T>(raw);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to deserialize secret {SecretName} into type {TypeName}"
+                    , secretName, typeof(T).Name);
+                throw;
+            }
         }
 
         /// <inheritdoc/>
@@ -78,9 +94,11 @@ namespace DGates.AwsSecretsManager
 
             if (_cache.TryGetValue(secretName, out var cached) && !cached.IsExpired(now))
             {
+                _logger.LogDebug("Cache hit for secret {SecretName}", secretName);
                 return cached.RawValue;
             }
 
+            _logger.LogInformation("Cache miss or expired for secret {SecretName}, fetching", secretName);
             var raw = await FetchRawAsync(secretName, cancellationToken).ConfigureAwait(false);
             _cache[secretName] = new CachedSecret(raw, now + _settings.CacheTtl);
             return raw;
@@ -90,37 +108,58 @@ namespace DGates.AwsSecretsManager
         public async Task<T> RefreshSecretAsync<T>(string secretName, CancellationToken cancellationToken = default)
             where T : class
         {
+            _logger.LogInformation("Refreshing secret {SecretName}, bypassing cache", secretName);
             var raw = await FetchRawAsync(secretName, cancellationToken).ConfigureAwait(false);
             _cache[secretName] = new CachedSecret(raw, DateTimeOffset.UtcNow + _settings.CacheTtl);
-            return Deserialize<T>(raw);
+
+            try
+            {
+                return Deserialize<T>(raw);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to deserialize secret {SecretName} into type {TypeName}"
+                    , secretName, typeof(T).Name);
+                throw;
+            }
         }
 
         /// <inheritdoc/>
         public void InvalidateCache(string secretName)
         {
+            _logger.LogDebug("Invalidating cache for secret {SecretName}", secretName);
             _cache.TryRemove(secretName, out _);
         }
 
         private async Task<string> FetchRawAsync(string secretName, CancellationToken cancellationToken)
         {
-            if (!string.IsNullOrWhiteSpace(_settings.LocalJsonFallbackPath))
+            try
             {
-                return FetchFromLocalJsonFallback(secretName);
-            }
-
-            return await _retryPipeline.ExecuteAsync(async ct =>
-            {
-                var response = await _client.GetSecretValueAsync(new GetSecretValueRequest
+                if (!string.IsNullOrWhiteSpace(_settings.LocalJsonFallbackPath))
                 {
-                    SecretId = secretName
-                }, ct).ConfigureAwait(false);
+                    return FetchFromLocalJsonFallback(secretName);
+                }
 
-                return response.SecretString;
-            }, cancellationToken).ConfigureAwait(false);
+                return await _retryPipeline.ExecuteAsync(async ct =>
+                {
+                    var response = await _client.GetSecretValueAsync(new GetSecretValueRequest
+                    {
+                        SecretId = secretName
+                    }, ct).ConfigureAwait(false);
+
+                    return response.SecretString;
+                }, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch secret {SecretName}", secretName);
+                throw;
+            }
         }
 
         private string FetchFromLocalJsonFallback(string secretName)
         {
+            _logger.LogInformation("Using local JSON fallback for secret {SecretName}", secretName);
             if (!File.Exists(_settings.LocalJsonFallbackPath))
             {
                 throw new FileNotFoundException(
@@ -128,6 +167,7 @@ namespace DGates.AwsSecretsManager
             }
 
             var json = File.ReadAllText(_settings.LocalJsonFallbackPath);
+
             var root = JObject.Parse(json);
 
             if (!root.TryGetValue(secretName, out var token))

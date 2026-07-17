@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Optional structured logging via `Microsoft.Extensions.Logging.Abstractions` — pass an `ILogger` to `SecretsManagerService`'s constructors or `SecretsManagerServiceFactory.Create`. Defaults to a no-op `NullLogger` when omitted, so existing callers are unaffected.
+
 ## [0.1.0-beta.1] - 2025-07-05
 
 ### Added
