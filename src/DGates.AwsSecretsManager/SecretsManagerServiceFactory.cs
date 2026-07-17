@@ -20,6 +20,9 @@ namespace DGates.AwsSecretsManager
         /// container.RegisterInstance&lt;ISecretsManagerService&gt;(service); // Unity
         /// builder.RegisterInstance(service).As&lt;ISecretsManagerService&gt;().SingleInstance(); // Autofac
         /// </code>
+        /// If no explicit <see cref="SecretsManagerSettings.AccessKey"/>/<see cref="SecretsManagerSettings.SecretKey"/>
+        /// are set, this validates the AWS SDK's default credential chain immediately and throws
+        /// <see cref="InvalidOperationException"/> if no credential source resolves.
         /// </summary>
         public static ISecretsManagerService Create(SecretsManagerSettings settings, ILogger logger = null)
         {

@@ -34,6 +34,15 @@ The AWS SDK provides low-level access to Secrets Manager. DGates.AwsSecretsManag
 dotnet add package DGates.AwsSecretsManager
 ```
 
+## Credentials
+
+`SecretsManagerSettings` resolves AWS credentials in this order:
+
+1. Explicit `AccessKey`/`SecretKey` set on the settings object
+2. The AWS SDK's default credential chain — environment variables (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`), `appSettings` keys (`AWSAccessKey`/`AWSSecretKey`) in web.config/app.config, the shared credentials file, or an attached IAM role
+
+If neither resolves, `SecretsManagerService`/`SecretsManagerServiceFactory.Create` throws `InvalidOperationException` immediately, rather than surfacing a generic auth error several calls deep on the first `GetSecretAsync`.
+
 ## Quick start
 
 ```csharp
@@ -48,6 +57,7 @@ var settings = new SecretsManagerSettings
     CacheTtl = TimeSpan.FromMinutes(10)
 };
 
+// Throws InvalidOperationException here if no credentials can be resolved — see Credentials above.
 var secretsService = new SecretsManagerService(settings);
 
 var apiKey = await secretsService.GetSecretAsync<MyApiKeySecret>("myapp/ApiKey");
