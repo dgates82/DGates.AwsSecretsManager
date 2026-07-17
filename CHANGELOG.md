@@ -5,7 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0-beta.4] - 2026-07-17
+## [1.0.0] - 2026-07-23
+### Added
+- Optional structured logging via `Microsoft.Extensions.Logging.Abstractions` —
+  pass an `ILogger` to `SecretsManagerService` constructors or
+  `SecretsManagerServiceFactory.Create`. Defaults to a no-op `NullLogger` when omitted,
+  so existing callers are unaffected.
 ### Changed
 - Fail-fast AWS credential validation — `SecretsManagerService` and
   `SecretsManagerServiceFactory.Create` now validate credential availability during
@@ -14,17 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 - Expanded README with architecture overview, design trade-off rationale, and
   "when not to use this library" guidance.
-- Documented credential resolution order and the new fail-fast behavior.
+- Documented credential resolution order and the fail-fast behavior.
 
-## [1.0.0-beta.3] - 2026-07-16
-### Added
-- Optional structured logging via `Microsoft.Extensions.Logging.Abstractions` —
-  pass an `ILogger` to `SecretsManagerService` constructors or
-  `SecretsManagerServiceFactory.Create`. Defaults to a no-op `NullLogger` when omitted,
-  so existing callers are unaffected.
-
-Supersedes 1.0.0-beta.1 and 1.0.0-beta.2, which were unlisted from NuGet after
-logging support was revised before the stable API was finalized.
+Stable release. Supersedes 1.0.0-beta.1 through 1.0.0-beta.4.
 
 ## [0.1.0-beta.1] - 2025-07-05
 ### Added
