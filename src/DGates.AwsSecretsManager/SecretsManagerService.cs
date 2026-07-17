@@ -33,6 +33,12 @@ namespace DGates.AwsSecretsManager
         /// Initializes a new instance using the provided settings, creating and owning an
         /// <see cref="IAmazonSecretsManager"/> client internally. <paramref name="logger"/> is
         /// optional; when omitted, logging is a no-op via <see cref="NullLogger"/>.
+        /// <para>
+        /// If <see cref="SecretsManagerSettings.AccessKey"/>/<see cref="SecretsManagerSettings.SecretKey"/>
+        /// are not set, this validates the AWS SDK's default credential chain immediately and throws
+        /// <see cref="InvalidOperationException"/> if no credential source resolves, rather than
+        /// deferring that failure to the first <see cref="GetSecretAsync{T}"/> call.
+        /// </para>
         /// </summary>
         public SecretsManagerService(SecretsManagerSettings settings, ILogger logger = null)
             : this(settings, BuildClient(settings), logger)
@@ -225,6 +231,21 @@ namespace DGates.AwsSecretsManager
                 !string.IsNullOrWhiteSpace(settings.SecretKey))
             {
                 return new AmazonSecretsManagerClient(settings.AccessKey, settings.SecretKey, config);
+            }
+
+            // No explicit credentials — validate the AWS SDK's default credential chain now,
+            // so misconfiguration fails fast here instead of surfacing as a generic auth error
+            // several calls deep on the first GetSecretAsync.
+            try
+            {
+                Amazon.Runtime.Credentials.DefaultAWSCredentialsIdentityResolver.GetCredentials(config);
+            }
+            catch (Amazon.Runtime.AmazonClientException ex)
+            {
+                throw new InvalidOperationException(
+                    "No AWS credentials found. Set AccessKey/SecretKey on SecretsManagerSettings, " +
+                    "configure AWSAccessKey/AWSSecretKey in appSettings, set AWS environment variables, " +
+                    "or ensure an IAM role is attached if running on AWS infrastructure.", ex);
             }
 
             // Falls back to the default AWS credential chain.

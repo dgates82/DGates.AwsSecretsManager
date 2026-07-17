@@ -129,6 +129,71 @@ namespace DGates.AwsSecretsManager.Tests
             VerifyLogged(mockLogger);
         }
 
+        [Fact]
+        public void Constructor_NoExplicitCredentialsAndNoCredentialChain_ThrowsInvalidOperationException()
+        {
+            using (new ClearedAwsCredentialEnvironment())
+            {
+                var settings = new SecretsManagerSettings { Region = "us-west-2" };
+
+                var ex = Assert.Throws<InvalidOperationException>(() => new SecretsManagerService(settings));
+                Assert.Contains("No AWS credentials found", ex.Message);
+                Assert.IsType<Amazon.Runtime.AmazonClientException>(ex.InnerException);
+            }
+        }
+
+        [Fact]
+        public void Constructor_ExplicitAccessAndSecretKey_SkipsCredentialChainCheck()
+        {
+            using (new ClearedAwsCredentialEnvironment())
+            {
+                var settings = new SecretsManagerSettings
+                {
+                    Region = "us-west-2",
+                    AccessKey = "AKIAFAKEEXAMPLE",
+                    SecretKey = "fake-secret-key"
+                };
+
+                using (var service = new SecretsManagerService(settings))
+                {
+                    Assert.NotNull(service);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Clears the environment variables and AWS_PROFILE the default credential chain
+        /// consults, so credential-resolution tests aren't at the mercy of whatever the host
+        /// running the tests happens to have configured. Restores original values on dispose.
+        /// </summary>
+        private sealed class ClearedAwsCredentialEnvironment : IDisposable
+        {
+            private static readonly string[] Names =
+            {
+                "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN", "AWS_PROFILE"
+            };
+
+            private readonly System.Collections.Generic.Dictionary<string, string> _original =
+                new System.Collections.Generic.Dictionary<string, string>();
+
+            public ClearedAwsCredentialEnvironment()
+            {
+                foreach (var name in Names)
+                {
+                    _original[name] = Environment.GetEnvironmentVariable(name);
+                    Environment.SetEnvironmentVariable(name, null);
+                }
+            }
+
+            public void Dispose()
+            {
+                foreach (var name in Names)
+                {
+                    Environment.SetEnvironmentVariable(name, _original[name]);
+                }
+            }
+        }
+
         private static void VerifyLogged(Mock<ILogger> mockLogger)
         {
             mockLogger.Verify(
