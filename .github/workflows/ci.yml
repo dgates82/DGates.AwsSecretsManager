@@ -15,6 +15,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -24,6 +26,45 @@ jobs:
       - name: Setup Mono
         run: sudo apt-get install -y mono-complete
 
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cache SonarQube Cloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache SonarQube Cloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v4
+        with:
+          path: ./.sonar/scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+
+      - name: Install SonarQube Cloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ./.sonar/scanner
+          dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
+
+      # workflow_dispatch runs don't get branch auto-detected by the scanner (a known
+      # SonarScanner limitation) and silently analyze as if there's no branch at all -
+      # pass it explicitly for any non-PR trigger. PR runs already auto-detect correctly
+      # via sonar.pullrequest.*, so leave those alone.
+      - name: Begin SonarQube Cloud analysis
+        run: |
+          BRANCH_ARGS=""
+          if [ -z "${{ github.event.pull_request.number }}" ]; then
+            BRANCH_ARGS="/d:sonar.branch.name=${{ github.ref_name }}"
+          fi
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"${{ vars.SONAR_PROJECT_KEY }}" /o:"${{ vars.SONAR_ORG }}" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.qualitygate.wait=true /d:sonar.cs.cobertura.reportsPaths="**/coverage.cobertura.xml" $BRANCH_ARGS
+
       - name: Restore
         run: dotnet restore DGates.AwsSecretsManager.sln
 
@@ -31,7 +72,7 @@ jobs:
         run: dotnet build DGates.AwsSecretsManager.sln --configuration Release --no-restore
 
       - name: Unit tests
-        run: dotnet test --configuration Release --no-build --filter "Category!=Integration"
+        run: dotnet test --configuration Release --no-build --filter "Category!=Integration" --collect:"XPlat Code Coverage"
 
       - name: Start LocalStack
         run: |
@@ -49,11 +90,30 @@ jobs:
           ./docker/seed-secrets.sh
 
       - name: Integration tests
-        run: dotnet test --configuration Release --no-build --filter "Category=Integration"
+        run: dotnet test --configuration Release --no-build --filter "Category=Integration" --collect:"XPlat Code Coverage"
 
       - name: Stop LocalStack
         if: always()
         run: docker rm -f localstack || true
+
+      - name: End SonarQube Cloud analysis
+        id: sonar-end
+        run: ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Surface quality gate result
+        if: always()
+        run: |
+          if [ -n "${{ github.event.pull_request.number }}" ]; then
+            DASHBOARD_URL="https://sonarcloud.io/dashboard?id=${{ vars.SONAR_PROJECT_KEY }}&pullRequest=${{ github.event.pull_request.number }}"
+          else
+            DASHBOARD_URL="https://sonarcloud.io/dashboard?id=${{ vars.SONAR_PROJECT_KEY }}&branch=${{ github.ref_name }}"
+          fi
+          if [ "${{ steps.sonar-end.outcome }}" = "failure" ]; then
+            echo "### :x: SonarQube Cloud quality gate FAILED" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### :white_check_mark: SonarQube Cloud quality gate passed" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "[View details on SonarQube Cloud]($DASHBOARD_URL)" >> "$GITHUB_STEP_SUMMARY"
 
   pack:
     needs: build-and-test

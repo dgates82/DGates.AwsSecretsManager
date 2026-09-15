@@ -4,6 +4,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- `SonarAnalyzer.CSharp` as a build-time Roslyn analyzer (`PrivateAssets=all`, never flows
+  to consumers).
+- SonarQube Cloud static analysis, wired into CI's `build-and-test` job via
+  `dotnet-sonarscanner` and gated on the quality gate result, with coverage
+  (`dotnet test --collect:"XPlat Code Coverage"` across both unit and integration test
+  runs) fed into the scan via `sonar.cs.cobertura.reportsPaths`. Explicit
+  `sonar.branch.name` for non-PR triggers, and `SONAR_PROJECT_KEY`/`SONAR_ORG` repo
+  variables instead of hardcoded literals.
+### Fixed
+- `NuGet/login@v1` pinned to a commit SHA (SonarQube Cloud finding).
 
 ## [1.0.0] - 2026-07-23
 ### Added
