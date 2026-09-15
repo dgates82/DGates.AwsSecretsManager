@@ -173,13 +173,16 @@ namespace DGates.AwsSecretsManager
             }
         }
 
+        // net48's HttpStatusCode enum predates RFC 6585, so 429 has no named member there.
+        private const System.Net.HttpStatusCode TooManyRequestsStatusCode = (System.Net.HttpStatusCode)429;
+
         private static bool IsTransient(AmazonSecretsManagerException ex)
         {
             // Throttling and 5xx-class errors are worth retrying; access/permission
             // and not-found errors are not.
             return ex is InternalServiceErrorException
                 || ex is LimitExceededException
-                || ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests;
+                || ex.StatusCode == TooManyRequestsStatusCode;
         }
 
         private static IAmazonSecretsManager BuildClient(SecretsManagerSettings settings)
