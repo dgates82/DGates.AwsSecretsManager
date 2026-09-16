@@ -71,6 +71,9 @@ jobs:
       - name: Build
         run: dotnet build DGates.AwsSecretsManager.sln --configuration Release --no-restore
 
+      - name: Debug - list test output directory
+        run: ls -la tests/DGates.AwsSecretsManager.Tests/bin/Release/net48/ | grep -i coverlet || echo "NO COVERLET FILES FOUND"
+
       - name: Unit tests
         run: dotnet test --configuration Release --no-build --filter "Category!=Integration" --collect:"XPlat Code Coverage"
 
