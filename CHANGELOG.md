@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   variables instead of hardcoded literals.
 ### Fixed
 - `NuGet/login@v1` pinned to a commit SHA (SonarQube Cloud finding).
+- `coverlet.collector` added to the test project - `--collect:"XPlat Code Coverage"` in CI
+  was silently a no-op without it, so the first Sonar scan reported 0% coverage.
+- `SecretsManagerService` sealed (no code implements or extends it, so the standard
+  `IDisposable` dispose pattern is unnecessary ceremony - SonarQube S3881).
+- Removed three log-then-rethrow catch blocks in `SecretsManagerService` that added no
+  context beyond what the propagated exception already carries (SonarQube S2139 - either log
+  and handle, or rethrow, not both).
+- Named the magic `429` status-code cast in the transient-error check (SonarQube S109);
+  `HttpStatusCode.TooManyRequests` isn't available on `net48`, so this is a local
+  `const HttpStatusCode` rather than the newer BCL enum member.
+- Added braces and put the `ArgumentNullException` throw on its own line in
+  `SecretsManagerServiceFactory.Create`'s guard clause (SonarQube S121/S122).
 
 ## [1.0.0] - 2026-07-23
 ### Added

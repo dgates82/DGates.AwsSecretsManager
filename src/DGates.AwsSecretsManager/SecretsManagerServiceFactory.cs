@@ -26,7 +26,10 @@ namespace DGates.AwsSecretsManager
         /// </summary>
         public static ISecretsManagerService Create(SecretsManagerSettings settings, ILogger logger = null)
         {
-            if (settings == null) throw new ArgumentNullException(nameof(settings));
+            if (settings == null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
             return new SecretsManagerService(settings, logger);
         }
     }

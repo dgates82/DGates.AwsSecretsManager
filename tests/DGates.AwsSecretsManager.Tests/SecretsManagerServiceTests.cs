@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.Runtime;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 using Microsoft.Extensions.Logging;
@@ -127,6 +128,28 @@ namespace DGates.AwsSecretsManager.Tests
 
             Assert.Equal("{\"ApiKey\":\"abc123\"}", result);
             VerifyLogged(mockLogger);
+        }
+
+        [Fact]
+        public async Task GetSecretStringAsync_RetriesOnTooManyRequestsStatusCode()
+        {
+            var throttled = new AmazonSecretsManagerException(
+                "rate exceeded", ErrorType.Unknown, "ThrottlingException", "req-id",
+                (System.Net.HttpStatusCode)429);
+            var mockClient = new Mock<IAmazonSecretsManager>();
+            mockClient
+                .SetupSequence(c => c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(throttled)
+                .ReturnsAsync(Response("{\"ApiKey\":\"abc123\"}"));
+
+            var service = new SecretsManagerService(new SecretsManagerSettings(), mockClient.Object);
+
+            var result = await service.GetSecretStringAsync("myapp/ApiKey");
+
+            Assert.Equal("{\"ApiKey\":\"abc123\"}", result);
+            mockClient.Verify(
+                c => c.GetSecretValueAsync(It.IsAny<GetSecretValueRequest>(), It.IsAny<CancellationToken>()),
+                Times.Exactly(2));
         }
 
         [Fact]
