@@ -19,7 +19,7 @@ namespace DGates.AwsSecretsManager
     /// Default implementation of <see cref="ISecretsManagerService"/>.
     /// Thread-safe; intended to be registered as a singleton.
     /// </summary>
-    public class SecretsManagerService : ISecretsManagerService, IDisposable
+    public sealed class SecretsManagerService : ISecretsManagerService, IDisposable
     {
         private readonly SecretsManagerSettings _settings;
         private readonly IAmazonSecretsManager _client;
@@ -75,16 +75,7 @@ namespace DGates.AwsSecretsManager
             where T : class
         {
             var raw = await GetSecretStringAsync(secretName, cancellationToken).ConfigureAwait(false);
-            try
-            {
-                return Deserialize<T>(raw);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to deserialize secret {SecretName} into type {TypeName}"
-                    , secretName, typeof(T).Name);
-                throw;
-            }
+            return Deserialize<T>(raw);
         }
 
         /// <inheritdoc/>
@@ -118,16 +109,7 @@ namespace DGates.AwsSecretsManager
             var raw = await FetchRawAsync(secretName, cancellationToken).ConfigureAwait(false);
             _cache[secretName] = new CachedSecret(raw, DateTimeOffset.UtcNow + _settings.CacheTtl);
 
-            try
-            {
-                return Deserialize<T>(raw);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to deserialize secret {SecretName} into type {TypeName}"
-                    , secretName, typeof(T).Name);
-                throw;
-            }
+            return Deserialize<T>(raw);
         }
 
         /// <inheritdoc/>
@@ -139,28 +121,20 @@ namespace DGates.AwsSecretsManager
 
         private async Task<string> FetchRawAsync(string secretName, CancellationToken cancellationToken)
         {
-            try
+            if (!string.IsNullOrWhiteSpace(_settings.LocalJsonFallbackPath))
             {
-                if (!string.IsNullOrWhiteSpace(_settings.LocalJsonFallbackPath))
-                {
-                    return FetchFromLocalJsonFallback(secretName);
-                }
-
-                return await _retryPipeline.ExecuteAsync(async ct =>
-                {
-                    var response = await _client.GetSecretValueAsync(new GetSecretValueRequest
-                    {
-                        SecretId = secretName
-                    }, ct).ConfigureAwait(false);
-
-                    return response.SecretString;
-                }, cancellationToken).ConfigureAwait(false);
+                return FetchFromLocalJsonFallback(secretName);
             }
-            catch (Exception ex)
+
+            return await _retryPipeline.ExecuteAsync(async ct =>
             {
-                _logger.LogError(ex, "Failed to fetch secret {SecretName}", secretName);
-                throw;
-            }
+                var response = await _client.GetSecretValueAsync(new GetSecretValueRequest
+                {
+                    SecretId = secretName
+                }, ct).ConfigureAwait(false);
+
+                return response.SecretString;
+            }, cancellationToken).ConfigureAwait(false);
         }
 
         private string FetchFromLocalJsonFallback(string secretName)
@@ -199,13 +173,16 @@ namespace DGates.AwsSecretsManager
             }
         }
 
+        // net48's HttpStatusCode enum predates RFC 6585, so 429 has no named member there.
+        private const System.Net.HttpStatusCode TooManyRequestsStatusCode = (System.Net.HttpStatusCode)429;
+
         private static bool IsTransient(AmazonSecretsManagerException ex)
         {
             // Throttling and 5xx-class errors are worth retrying; access/permission
             // and not-found errors are not.
             return ex is InternalServiceErrorException
                 || ex is LimitExceededException
-                || ex.StatusCode == (System.Net.HttpStatusCode)429;
+                || ex.StatusCode == TooManyRequestsStatusCode;
         }
 
         private static IAmazonSecretsManager BuildClient(SecretsManagerSettings settings)

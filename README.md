@@ -1,5 +1,8 @@
 # DGates.AwsSecretsManager
 
+[![CI](https://github.com/dgates82/DGates.AwsSecretsManager/actions/workflows/ci.yml/badge.svg)](https://github.com/dgates82/DGates.AwsSecretsManager/actions/workflows/ci.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dgates_awssecretsmanager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=dgates_awssecretsmanager)
+
 A lightweight, typed wrapper around AWS Secrets Manager for .NET Framework 4.8 applications
 that want modern Secrets Manager features without migrating off .NET Framework.
 
