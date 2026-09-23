@@ -2,11 +2,15 @@
 
 ## One-time setup
 
-1. Create a NuGet.org account and generate an API key scoped to the `DGates.AwsSecretsManager` package.
-2. Add it as a GitHub Actions secret:
-    - Go to Settings → Secrets and variables → Actions → New repository secret
-    - Name: `NUGET_API_KEY`
-    - Value: your NuGet API key
+1. On [NuGet.org](https://www.nuget.org), go to your account's **Trusted Publishing**
+   settings and add a new trusted publisher, linking it to this GitHub repo and the
+   `release.yml` workflow file.
+2. In this repo, add a repository secret named `NUGET_USER` containing your NuGet.org
+   profile name — your username, visible in your NuGet.org account settings, not an API
+   key or email address.
+3. No other secrets are needed. `release.yml`'s `publish` job requests `id-token: write`
+   permission and exchanges a short-lived OIDC token for a NuGet API key at publish time
+   via `NuGet/login`, pinned to a commit SHA — nothing long-lived is stored in the repo.
 
 ## Publishing a release
 
