@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `bin`/`obj`. Runs on push to `main`/`release/**`, on PRs, weekly on a schedule, and via
   `workflow_dispatch`.
 
+### Changed
+- README: added a CodeQL badge, a package-ecosystem table, and a link to the v1.0.0 release
+  post under Status.
+
 ## [1.1.0] - 2026-09-16
 ### Added
 - `SonarAnalyzer.CSharp` as a build-time Roslyn analyzer (`PrivateAssets=all`, never flows
