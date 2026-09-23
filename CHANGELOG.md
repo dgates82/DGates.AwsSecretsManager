@@ -5,11 +5,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-23
+
 ### Added
 - CodeQL static analysis (`.github/workflows/codeql.yml`), analyzing the `csharp` language
   via GitHub's Advanced Setup, independent of SonarQube Cloud. Path exclusions cover
   `bin`/`obj`. Runs on push to `main`/`release/**`, on PRs, weekly on a schedule, and via
   `workflow_dispatch`.
+
+### Changed
+- README: added CodeQL and coverage badges, a package-ecosystem table, and a link to the
+  v1.0.0 release post under Status.
+
+### Fixed
+- `docs/RELEASING.md` described the old static `NUGET_API_KEY` secret setup; rewritten to
+  match `release.yml`'s actual Trusted Publishing (OIDC) flow via `NUGET_USER`.
 
 ## [1.1.0] - 2026-09-16
 ### Added

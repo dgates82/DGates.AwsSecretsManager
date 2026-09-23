@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/dgates82/DGates.AwsSecretsManager/actions/workflows/ci.yml/badge.svg)](https://github.com/dgates82/DGates.AwsSecretsManager/actions/workflows/ci.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dgates_awssecretsmanager&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=dgates_awssecretsmanager)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=dgates_awssecretsmanager&metric=coverage)](https://sonarcloud.io/summary/new_code?id=dgates_awssecretsmanager)
+[![CodeQL](https://github.com/dgates82/DGates.AwsSecretsManager/actions/workflows/codeql.yml/badge.svg)](https://github.com/dgates82/DGates.AwsSecretsManager/actions/workflows/codeql.yml)
 
 A lightweight, typed wrapper around AWS Secrets Manager for .NET Framework 4.8 applications
 that want modern Secrets Manager features without migrating off .NET Framework.
@@ -187,7 +189,23 @@ https://dev.to/dgates82/modern-secrets-for-legacy-net-building-a-typed-cached-aw
 
 Stable release. Semantic versioning is followed for all releases.
 
-See [CHANGELOG.md](https://github.com/dgates82/DGates.AwsSecretsManager/blob/main/CHANGELOG.md) for release history.
+See [CHANGELOG.md](https://github.com/dgates82/DGates.AwsSecretsManager/blob/main/CHANGELOG.md) for release history,
+or the [v1.0.0 release post](https://dev.to/dgates82/dgatesawssecretsmanager-100-stable-59a7) for
+what changed going stable.
+
+## Part of a small ecosystem
+
+| Project | What it is | Reach for it when |
+| --- | --- | --- |
+| **DGates.AwsSecretsManager** (you are here) | Typed, cached AWS Secrets Manager wrapper for .NET Framework 4.8 | you're on .NET Framework and want typed, cached secrets without hand-rolling it |
+| [DGates.AwsSecretsManager.Examples](https://github.com/dgates82/DGates.AwsSecretsManager.Examples) | Console and ASP.NET MVC 5 example apps using this library | you want a working example before wiring it into your own app |
+
+More from dgates82: [DGates.Identity.Jwt2Fa](https://github.com/dgates82/DGates.Identity.Jwt2Fa),
+[DGates.Identity.NotificationProviders](https://github.com/dgates82/DGates.Identity.NotificationProviders),
+[angular-dotnet-auth-template](https://github.com/dgates82/angular-dotnet-auth-template),
+[dotnet-nuget-release-template](https://github.com/dgates82/dotnet-nuget-release-template), and
+[dgates-mock-servers](https://github.com/dgates82/dgates-mock-servers) — a separate identity/auth
+portfolio, same author.
 
 ## License
 
