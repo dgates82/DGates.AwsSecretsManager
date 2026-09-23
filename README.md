@@ -205,8 +205,7 @@ More from dgates82: [DGates.Identity.Jwt2Fa](https://github.com/dgates82/DGates.
 [angular-dotnet-auth-template](https://github.com/dgates82/angular-dotnet-auth-template),
 [dotnet-nuget-release-template](https://github.com/dgates82/dotnet-nuget-release-template), and
 [dgates-mock-servers](https://github.com/dgates82/dgates-mock-servers) — a separate identity/auth
-portfolio, same author. This package isn't scaffolded from `dotnet-nuget-release-template`; it
-predates it and targets net48 only.
+portfolio, same author.
 
 ## License
 
