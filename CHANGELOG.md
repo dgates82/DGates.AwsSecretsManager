@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README: added a CodeQL badge, a package-ecosystem table, and a link to the v1.0.0 release
   post under Status.
 
+### Fixed
+- `docs/RELEASING.md` described the old static `NUGET_API_KEY` secret setup; rewritten to
+  match `release.yml`'s actual Trusted Publishing (OIDC) flow via `NUGET_USER`.
+
 ## [1.1.0] - 2026-09-16
 ### Added
 - `SonarAnalyzer.CSharp` as a build-time Roslyn analyzer (`PrivateAssets=all`, never flows
