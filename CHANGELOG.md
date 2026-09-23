@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `bin`/`obj`. Runs on push to `main`/`release/**`, on PRs, weekly on a schedule, and via
   `workflow_dispatch`.
 
+### Changed
+- README: added CodeQL and coverage badges, a package-ecosystem table, and a link to the
+  v1.0.0 release post under Status.
+
 ### Fixed
 - `docs/RELEASING.md` described the old static `NUGET_API_KEY` secret setup; rewritten to
   match `release.yml`'s actual Trusted Publishing (OIDC) flow via `NUGET_USER`.
